@@ -64,7 +64,8 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 # export macro
 include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME})
+generate_export_header(${PROJECT_NAME}
+                       BASE_NAME hanzi_to_pinyin)
 target_include_directories(${PROJECT_NAME}
                            PUBLIC # use PUBLIC instead of PRIVATE because tests use it
                                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>
