@@ -6,7 +6,7 @@
 
 #include <sqlite3.h>
 
-#include <hanzi_to_pinyin_export.h>
+#include <hanzi-to-pinyin_export.h>
 
 #include <config/db_config/db_config.h>
 
