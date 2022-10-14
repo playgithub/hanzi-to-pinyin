@@ -1,0 +1,20 @@
+#pragma once
+
+#include <string>
+#include <config/db_config/db_config.h>
+
+namespace HanZiToPinYin_NS
+{
+class Config
+{
+public:
+    void LoadDefault() { LoadFromFile("@DEFAULT_CONFIG_FILE_PATH@"); }
+    void LoadFromFile(const std::string & path);
+
+public:
+    const DbConfig & GetDbConfig() const { return __db_config; }
+
+private:
+    DbConfig __db_config;
+};
+} // namespace HanZiToPinYin_NS

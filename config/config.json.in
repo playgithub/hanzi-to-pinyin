@@ -1,0 +1,8 @@
+{
+    "db_config":
+    {
+        "sqlite_file_path": "@SQLITE_FILE_PATH@",
+        "table_name_for_char": "hanzi_pinyin",
+        "table_name_for_phrase": "phrase_pinyin"
+    }    
+}
