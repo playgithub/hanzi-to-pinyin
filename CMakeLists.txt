@@ -65,8 +65,8 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # export macro
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME}
-                       EXPORT_FILE_NAME export/${PROJECT_NAME}_export.h)
-set(EXPORT_FILE_PATH ${PROJECT_BINARY_DIR}/export/${PROJECT_NAME}_export.h)
+                       EXPORT_FILE_NAME source/${PROJECT_NAME}/export/${PROJECT_NAME}_export.h)
+set(EXPORT_FILE_PATH ${PROJECT_BINARY_DIR}/source/${PROJECT_NAME}/export/${PROJECT_NAME}_export.h)
 
 target_include_directories(${PROJECT_NAME}
                            PUBLIC # use PUBLIC instead of PRIVATE because tests use it
@@ -74,9 +74,7 @@ target_include_directories(${PROJECT_NAME}
                                $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/source>
                                $<BUILD_INTERFACE:${CONFIGURED_FILES_ROOT}/source>
                            INTERFACE
-                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}>
-                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}>/${PROJECT_NAME}
-                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}>/${PROJECT_NAME}/export)
+                               $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}>)
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/source/${PROJECT_NAME}/pch/pch.h)
 
@@ -89,9 +87,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${SQLite3_LIBRARIES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${RapidJSON_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cppjieba::cppjieba)
-
-# for Windows
-target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<PLATFORM_ID:Windows>:WXUSINGDLL>)
 
 ########
 # test #
