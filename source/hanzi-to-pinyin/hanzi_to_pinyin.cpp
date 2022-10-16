@@ -238,8 +238,6 @@ bool HanZiToPinYin::GetPhrasePinYin(const std::string & phrase,
     {
         if (!phrase_pinyin.empty())
             ok = true;
-        else
-            std::cerr << "empty pinyin for phrase\n";
     }
     else
     {
