@@ -44,7 +44,7 @@ configure_file(config/config.json.in
                ${CONFIGURED_FILES_ROOT}/config/config.json
                @ONLY)
 
-set(DEFAULT_CONFIG_FILE_PATH ${CONFIGURED_FILES_ROOT}/source/${PROJECT_NAME}/config/config.json)
+set(DEFAULT_CONFIG_FILE_PATH ${CONFIGURED_FILES_ROOT}/config/config.json)
 configure_file(source/${PROJECT_NAME}/config/config.h.in
                ${CONFIGURED_FILES_ROOT}/source/${PROJECT_NAME}/config/config.h
                @ONLY)
@@ -133,7 +133,7 @@ install(FILES ${CONFIGURED_FILES_ROOT}/config/config.json.for_install
         DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/config
         RENAME config.json)
 
-set(DEFAULT_CONFIG_FILE_PATH ${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/config/config.json)
+set(DEFAULT_CONFIG_FILE_PATH ${CMAKE_INSTALL_FULL_DATADIR}/config.json)
 configure_file(source/${PROJECT_NAME}/config/config.h.in
                ${CONFIGURED_FILES_ROOT}/source/${PROJECT_NAME}/config/config.h.for_install
                @ONLY)
