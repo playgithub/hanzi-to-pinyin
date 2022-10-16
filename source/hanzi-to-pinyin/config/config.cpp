@@ -1,12 +1,13 @@
+#include <hanzi-to-pinyin/pch/pch.h>
+
 #include <fstream>
-#include <pch/pch.h>
 #include <sstream>
 #include <stdexcept>
 #include <rapidjson/document.h>
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/error/en.h>
 
-#include <config/config.h>
+#include <hanzi-to-pinyin/config/config.h>
 
 using namespace HanZiToPinYin_NS;
 

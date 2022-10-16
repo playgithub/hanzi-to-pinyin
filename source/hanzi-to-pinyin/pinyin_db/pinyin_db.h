@@ -6,9 +6,9 @@
 
 #include <sqlite3.h>
 
-#include <hanzi-to-pinyin_export.h>
+#include <hanzi-to-pinyin/export/hanzi-to-pinyin_export.h>
 
-#include <config/db_config/db_config.h>
+#include <hanzi-to-pinyin/config/db_config/db_config.h>
 
 namespace HanZiToPinYin_NS
 {

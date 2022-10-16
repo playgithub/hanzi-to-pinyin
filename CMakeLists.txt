@@ -44,9 +44,9 @@ configure_file(config/config.json.in
                ${CONFIGURED_FILES_ROOT}/config/config.json
                @ONLY)
 
-set(DEFAULT_CONFIG_FILE_PATH ${CONFIGURED_FILES_ROOT}/config/config.json)
-configure_file(source/config/config.h.in
-               ${CONFIGURED_FILES_ROOT}/source/config/config.h
+set(DEFAULT_CONFIG_FILE_PATH ${CONFIGURED_FILES_ROOT}/source/${PROJECT_NAME}/config/config.json)
+configure_file(source/${PROJECT_NAME}/config/config.h.in
+               ${CONFIGURED_FILES_ROOT}/source/${PROJECT_NAME}/config/config.h
                @ONLY)
 
 ##########
@@ -54,28 +54,31 @@ configure_file(source/config/config.h.in
 ##########
 
 set(CPP_FILES
-    source/config/config.cpp
-    source/config/db_config/db_config.cpp
-    source/hanzi_to_pinyin.cpp
-    source/pinyin_db/pinyin_db.cpp)
+    source/${PROJECT_NAME}/config/config.cpp
+    source/${PROJECT_NAME}/config/db_config/db_config.cpp
+    source/${PROJECT_NAME}/hanzi_to_pinyin.cpp
+    source/${PROJECT_NAME}/pinyin_db/pinyin_db.cpp)
 
 add_library(${PROJECT_NAME} ${CPP_FILES})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 # export macro
 include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME})
+generate_export_header(${PROJECT_NAME}
+                       EXPORT_FILE_NAME export/${PROJECT_NAME}_export.h)
+set(EXPORT_FILE_PATH ${PROJECT_BINARY_DIR}/export/${PROJECT_NAME}_export.h)
+
 target_include_directories(${PROJECT_NAME}
                            PUBLIC # use PUBLIC instead of PRIVATE because tests use it
                                $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/source>
-                               $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+                               $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/source>
                                $<BUILD_INTERFACE:${CONFIGURED_FILES_ROOT}/source>
                            INTERFACE
                                $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}>
                                $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}>/${PROJECT_NAME}
                                $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}>/${PROJECT_NAME}/export)
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/source/pch/pch.h)
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/source/${PROJECT_NAME}/pch/pch.h)
 
 #target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::locale)
@@ -115,17 +118,16 @@ install(EXPORT ${PROJECT_NAME}
         FILE ${PROJECT_NAME}-config.cmake)
 
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/source/" # source directory
-        DESTINATION "include/${PROJECT_NAME}" # target directory
+        DESTINATION "include/" # target directory
         FILES_MATCHING
         PATTERN "*.h" # install only matched files
         PATTERN "pch" EXCLUDE) # exclude pch
 
-string(TOLOWER ${PROJECT_NAME}_export.h EXPORT_FILE_NAME)
-install(FILES ${PROJECT_BINARY_DIR}/${EXPORT_FILE_NAME}
-        DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/${PROJECT_NAME}/export)
+install(FILES ${EXPORT_FILE_PATH}
+        DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/${PROJECT_NAME}/export/)
 
 install(FILES ${PROJECT_SOURCE_DIR}/database/pinyin.sqlite3
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/database)
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/database/)
 
 set(SQLITE_FILE_PATH ${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/database/pinyin.sqlite3)
 configure_file(config/config.json.in
@@ -137,10 +139,10 @@ install(FILES ${CONFIGURED_FILES_ROOT}/config/config.json.for_install
         RENAME config.json)
 
 set(DEFAULT_CONFIG_FILE_PATH ${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/config/config.json)
-configure_file(source/config/config.h.in
-               ${CONFIGURED_FILES_ROOT}/source/config/config.h.for_install
+configure_file(source/${PROJECT_NAME}/config/config.h.in
+               ${CONFIGURED_FILES_ROOT}/source/${PROJECT_NAME}/config/config.h.for_install
                @ONLY)
 
-install(FILES ${CONFIGURED_FILES_ROOT}/source/config/config.h.for_install
-        DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/${PROJECT_NAME}/config
+install(FILES ${CONFIGURED_FILES_ROOT}/source/${PROJECT_NAME}/config/config.h.for_install
+        DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}/${PROJECT_NAME}/config/
         RENAME config.h)

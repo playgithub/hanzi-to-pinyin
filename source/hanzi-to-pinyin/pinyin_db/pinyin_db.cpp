@@ -1,6 +1,6 @@
-#include <pch/pch.h>
-#include <pinyin_db/pinyin_db.h>
-#include <config/config.h>
+#include <hanzi-to-pinyin/pch/pch.h>
+#include <hanzi-to-pinyin/config/config.h>
+#include "pinyin_db.h"
 
 using namespace HanZiToPinYin_NS;
 

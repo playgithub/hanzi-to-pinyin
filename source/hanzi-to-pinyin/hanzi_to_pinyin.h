@@ -5,8 +5,8 @@
 #include <sqlite3.h>
 #include <cppjieba/config.hpp>
 #include <cppjieba/Jieba.hpp>
-#include <hanzi-to-pinyin_export.h>
-#include <config/config.h>
+#include <hanzi-to-pinyin/export/hanzi-to-pinyin_export.h>
+#include <hanzi-to-pinyin/config/config.h>
 
 namespace HanZiToPinYin_NS
 {
