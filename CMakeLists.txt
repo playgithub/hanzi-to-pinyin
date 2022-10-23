@@ -26,11 +26,23 @@ include(GNUInstallDirs)
 # boost
 find_package(Boost 1.70.0 REQUIRED COMPONENTS locale)
 
+# curl
+find_package(CURL REQUIRED)
+
+# openssl
+find_package(OpenSSL REQUIRED)
+
+# protobuf
+find_package(Protobuf REQUIRED)
+
 # SQLite3
 find_package(SQLite3 REQUIRED)
 
 # RapidJSON
 find_package(RapidJSON REQUIRED)
+
+# BasicToolBox
+find_package(BasicToolBox CONFIG REQUIRED)  
 
 # cppjieba
 find_package(cppjieba REQUIRED)
@@ -85,6 +97,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${SQLite3_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SQLite3_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${RapidJSON_INCLUDE_DIRS})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC BasicToolBox::BasicToolBox)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC cppjieba::cppjieba)
 

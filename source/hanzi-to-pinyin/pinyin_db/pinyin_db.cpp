@@ -1,6 +1,5 @@
-#include <stdexcept>
-
 #include <hanzi-to-pinyin/pch/pch.h>
+
 #include <hanzi-to-pinyin/config/config.h>
 
 #include "pinyin_db.h"
@@ -33,9 +32,10 @@ bool PinYinDB::ImportFromHanZiFile(const std::string & hanzi_file_path, const st
 {
     bool ok = false;
 
+    MsgStack err_msg_stack;
+
     sqlite3 * db = nullptr;
-    if (sqlite3_open_v2(sqlite_file_path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) ==
-            SQLITE_OK)
+    if (sqlite3_open_v2(sqlite_file_path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) == SQLITE_OK)
     {
         std::ifstream ifs;
         ifs.open(hanzi_file_path);
@@ -43,28 +43,42 @@ bool PinYinDB::ImportFromHanZiFile(const std::string & hanzi_file_path, const st
         {
             std::string s((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
-            if (ImportFromHanZiString(s, db, __db_cfg.GetTableNameForChar()))
-                ok = true;
-            else
-                
-                std::cerr << "FromStringForHanZi failed\n";
+            try
+            {
+                ImportFromHanZiString(s, db, __db_cfg.GetTableNameForChar());
+            }
+            catch (std::exception & e)
+            {
+                std::ostringstream oss;
+                oss
+                    << u8"ImportFromHanZiString failed\n"
+                    << e.what();
+
+                err_msg_stack.Push(std::move(oss.str()));
+            }
 
             ifs.close();
         }
         else
-            std::cerr << "failed to open plain file for pinyin\n";
+            err_msg_stack.Push(std::move(std::string(u8"failed to open plain file for pinyin")));
 
         if (sqlite3_close_v2(db) != SQLITE_OK)
         {
-            std::cerr << sqlite3_errmsg(db) << '\n';
+            err_msg_stack.Push(std::move(std::string(sqlite3_errmsg(db))));
             ok = false;
         }
     }
     else
     {
-        std::cerr << sqlite3_errmsg(db) << '\n';
+        err_msg_stack.Push(std::move(std::string(sqlite3_errmsg(db))));
         if (db != nullptr && sqlite3_close_v2(db) != SQLITE_OK)
-            std::cerr << sqlite3_errmsg(db) << '\n';
+            err_msg_stack.Push(std::move(std::string(sqlite3_errmsg(db))));
+    }
+
+    if (!ok)
+    {
+        std::string err_msgs = err_msg_stack.ToString();
+        throw std::runtime_error(err_msgs);
     }
 
     return ok;
@@ -74,9 +88,10 @@ bool PinYinDB::ImportFromPhraseFile(const std::string & phrase_file_path, const 
 {
     bool ok = false;
 
+    MsgStack err_msg_stack;
+
     sqlite3 * db = nullptr;
-    if (sqlite3_open_v2(sqlite_file_path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) ==
-            SQLITE_OK)
+    if (sqlite3_open_v2(sqlite_file_path.c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr) == SQLITE_OK)
     {
         std::ifstream ifs;
         ifs.open(phrase_file_path);
@@ -84,51 +99,67 @@ bool PinYinDB::ImportFromPhraseFile(const std::string & phrase_file_path, const 
         {
             std::string s((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
-            if (ImportFromPhraseString(s, db, __db_cfg.GetTableNameForPhrase()))
-                ok = true;
-            else
-                std::cerr << "FromStringForPhrase failed\n";
+            try
+            {
+                ImportFromPhraseString(s, db, __db_cfg.GetTableNameForPhrase());
+            }
+            catch (std::exception & e)
+            {
+                std::ostringstream oss;
+                oss
+                    << u8"ImportFromPhraseString failed\n"
+                    << e.what();
+
+                err_msg_stack.Push(std::move(oss.str()));
+            }
 
             ifs.close();
         }
         else
-            std::cerr << "failed to open plain file for pinyin\n";
+            err_msg_stack.Push(std::move(std::string(u8"failed to open plain file for pinyin")));
 
         if (sqlite3_close_v2(db) != SQLITE_OK)
         {
-            std::cerr << sqlite3_errmsg(db) << '\n';
+            err_msg_stack.Push(std::move(std::string(sqlite3_errmsg(db))));
             ok = false;
         }
     }
     else
     {
-        std::cerr << sqlite3_errmsg(db) << '\n';
+        err_msg_stack.Push(std::move(std::string(sqlite3_errmsg(db))));
         if (db != nullptr && sqlite3_close_v2(db) != SQLITE_OK)
-            std::cerr << sqlite3_errmsg(db) << '\n';
+            err_msg_stack.Push(std::move(std::string(sqlite3_errmsg(db))));
+    }
+
+    if (!ok)
+    {
+        std::string err_msgs = err_msg_stack.ToString();
+        throw std::runtime_error(err_msgs);
     }
 
     return ok;
 }
 
-bool PinYinDB::ImportFromHanZiString(const std::string & s, sqlite3 * db, const std::string & table_name)
+void PinYinDB::ImportFromHanZiString(const std::string & s, sqlite3 * db, const std::string & table_name)
 {
     std::string::const_iterator it_begin = s.cbegin();
     std::string::const_iterator it_end = s.cend();
 
     std::ostringstream sql;
 
-    char * error_msg = nullptr;
+    char * err_msg = nullptr;
 
     sql << "CREATE TABLE IF NOT EXISTS " << table_name << "(hanzi_utf16 INTEGER PRIMARY KEY NOT NULL,"
         << "py_no_tone NVARCHAR(6) NOT NULL,"
         << "py_tone NVARCHAR(6) NOT NULL)";
 
-    if (sqlite3_exec(db, sql.str().c_str(), nullptr, 0, &error_msg) != SQLITE_OK)
+    if (sqlite3_exec(db, sql.str().c_str(), nullptr, 0, &err_msg) != SQLITE_OK)
     {
-        std::cerr << error_msg << '\n';
-        sqlite3_free(error_msg);
-        error_msg = nullptr;
-        return false;
+        std::string s_err_msg(err_msg);
+        
+        sqlite3_free(err_msg);
+        
+        throw std::runtime_error(s_err_msg);
     }
 
     sql.str("");
@@ -136,7 +167,6 @@ bool PinYinDB::ImportFromHanZiString(const std::string & s, sqlite3 * db, const 
 
     sql << "INSERT INTO " << table_name << " VALUES";
 
-    bool ok = true;
     bool has_item = false;
 
     std::string s_pinyins_tone;
@@ -154,11 +184,7 @@ bool PinYinDB::ImportFromHanZiString(const std::string & s, sqlite3 * db, const 
         char * endptr = nullptr;
         std::uint32_t utf8_code = std::strtoul(match[1].str().c_str(), &endptr, 16);
         if (*endptr != 0)
-        {
-            std::cerr << "strtoul not perfect\n";
-            ok = false;
-            break;
-        }
+            throw std::runtime_error(std::string(u8"strtoul not perfect"));
 
         s_pinyins_tone = match[2].str();
 
@@ -186,36 +212,33 @@ bool PinYinDB::ImportFromHanZiString(const std::string & s, sqlite3 * db, const 
 
     sql << " ON CONFLICT(hanzi_utf16) DO UPDATE SET py_no_tone=excluded.py_no_tone, py_tone=excluded.py_tone";
 
-    if (ok)
+    if (sqlite3_exec(db, sql.str().c_str(), nullptr, 0, &err_msg) != SQLITE_OK)
     {
-        if (sqlite3_exec(db, sql.str().c_str(), nullptr, 0, &error_msg) != SQLITE_OK)
-        {
-            std::cerr << error_msg << '\n';
-            sqlite3_free(error_msg);
-            error_msg = nullptr;
-            ok = false;
-        }
-    }
+        std::string s_err_msg(err_msg);
 
-    return ok;
+        sqlite3_free(err_msg);
+            
+        throw std::runtime_error(s_err_msg);
+    }
 }
 
-bool PinYinDB::ImportFromPhraseString(const std::string & s, sqlite3 * db, const std::string & table_name)
+void PinYinDB::ImportFromPhraseString(const std::string & s, sqlite3 * db, const std::string & table_name)
 {
     std::ostringstream oss_sql;
 
-    char * error_msg = nullptr;
+    char * err_msg = nullptr;
 
     oss_sql << "CREATE TABLE IF NOT EXISTS " << table_name << "(phrase_utf8 TEXT PRIMARY KEY NOT NULL,"
             << "py_no_tone TEXT NOT NULL,"
             << "py_tone TEXT NOT NULL)";
 
-    if (sqlite3_exec(db, oss_sql.str().c_str(), nullptr, 0, &error_msg) != SQLITE_OK)
+    if (sqlite3_exec(db, oss_sql.str().c_str(), nullptr, 0, &err_msg) != SQLITE_OK)
     {
-        std::cerr << error_msg << '\n';
-        sqlite3_free(error_msg);
-        error_msg = nullptr;
-        return false;
+        std::string s_err_msg(err_msg);
+        
+        sqlite3_free(err_msg);
+        
+        throw std::runtime_error(s_err_msg);
     }
 
     std::ostringstream oss_sql_head;
@@ -224,7 +247,6 @@ bool PinYinDB::ImportFromPhraseString(const std::string & s, sqlite3 * db, const
 
     std::ostringstream oss_sql_values;
 
-    bool ok = true;
     std::string s_pinyins_tone;
     std::string s_pinyins_no_tone;
 
@@ -262,13 +284,13 @@ bool PinYinDB::ImportFromPhraseString(const std::string & s, sqlite3 * db, const
                         << " ON CONFLICT(phrase_utf8) DO UPDATE SET py_no_tone=excluded.py_no_tone, "
                            "py_tone=excluded.py_tone";
 
-                if (sqlite3_exec(db, oss_sql.str().c_str(), nullptr, 0, &error_msg) != SQLITE_OK)
+                if (sqlite3_exec(db, oss_sql.str().c_str(), nullptr, 0, &err_msg) != SQLITE_OK)
                 {
-                    std::cerr << error_msg << '\n';
-                    sqlite3_free(error_msg);
-                    error_msg = nullptr;
-                    ok = false;
-                    break;
+                    std::string s_err_msg(err_msg);
+                    
+                    sqlite3_free(err_msg);
+                    
+                    throw std::runtime_error(s_err_msg);
                 }
 
                 record_count_to_insert = 0;
@@ -281,7 +303,7 @@ bool PinYinDB::ImportFromPhraseString(const std::string & s, sqlite3 * db, const
         it_begin = match.suffix().first;
     }
 
-    if (ok && record_count_to_insert > 0)
+    if (record_count_to_insert > 0)
     {
         oss_sql.str("");
         oss_sql.clear();
@@ -289,16 +311,15 @@ bool PinYinDB::ImportFromPhraseString(const std::string & s, sqlite3 * db, const
         oss_sql << sql_head << oss_sql_values.str()
                 << " ON CONFLICT(phrase_utf8) DO UPDATE SET py_no_tone=excluded.py_no_tone, py_tone=excluded.py_tone";
 
-        if (sqlite3_exec(db, oss_sql.str().c_str(), nullptr, 0, &error_msg) != SQLITE_OK)
+        if (sqlite3_exec(db, oss_sql.str().c_str(), nullptr, 0, &err_msg) != SQLITE_OK)
         {
-            std::cerr << error_msg << '\n';
-            sqlite3_free(error_msg);
-            error_msg = nullptr;
-            ok = false;
+            std::string s_err_msg(err_msg);
+            
+            sqlite3_free(err_msg);
+            
+            throw std::runtime_error(s_err_msg);
         }
     }
-
-    return ok;
 }
 
 bool PinYinDB::StripToneFromPinyin(const std::string & pinyin_with_tone, std::string & pinyin_without_tone)

@@ -15,11 +15,7 @@ int main()
         std::string pinyin_without_tone;
         std::string pinyin_first_letters;
 
-        if (!hanzi_to_pinyin.GetPinYin(input, &pinyin_with_tone, &pinyin_without_tone, &pinyin_first_letters))
-        {
-            std::cerr << "HanZiToPinYin::GetPinYin failed\n";
-            return -2;
-        }
+        hanzi_to_pinyin.GetPinYin(input, &pinyin_with_tone, &pinyin_without_tone, &pinyin_first_letters);
 
         std::cout << "---Input---\n"
                   << input
@@ -29,6 +25,8 @@ int main()
                   << "\nfirst letters: " << pinyin_first_letters
                   << "\n---End---"
                   << std::endl;
+
+        return 0;
     }
     catch (std::exception & e)
     {
@@ -36,6 +34,4 @@ int main()
 
         return -1;
     }
-
-    return 0;
 }

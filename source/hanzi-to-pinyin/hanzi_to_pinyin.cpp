@@ -1,5 +1,5 @@
 #include <hanzi-to-pinyin/pch/pch.h>
-#include <exception>
+
 #include <memory>
 
 #include "hanzi_to_pinyin.h"
@@ -47,7 +47,7 @@ void HanZiToPinYin::UnInit()
     __jieba.reset();
 }
 
-bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
+void HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
                               std::string * pinyin_with_tone,
                               std::string * pinyin_without_tone,
                               std::string * pinyin_first_letters,
@@ -55,21 +55,13 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
 {
     if (pinyin_with_tone != nullptr)
     {
-        if (!GetPinYin(input_in_utf8, *pinyin_with_tone, true, seperator))
-        {
-            std::cerr << "GetPinYin (with tone) failed\n";
-            return false;
-        }
+        GetPinYin(input_in_utf8, *pinyin_with_tone, true, seperator);
     }
 
     if (pinyin_without_tone != nullptr || pinyin_first_letters != nullptr)
     {
         std::string pinyin_without_tone_tmp;
-        if (!GetPinYin(input_in_utf8, pinyin_without_tone_tmp, false, seperator))
-        {
-            std::cerr << "GetPinYin (without tone) failed\n";
-            return false;
-        }
+        GetPinYin(input_in_utf8, pinyin_without_tone_tmp, false, seperator);
 
         if (pinyin_first_letters != nullptr)
         {
@@ -81,11 +73,9 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
             *pinyin_without_tone = std::move(pinyin_without_tone_tmp);
         }
     }
-
-    return true;
 }
 
-bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
+void HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
                               std::string & output_in_utf8,
                               bool with_tone,
                               const char seperator)
@@ -122,7 +112,7 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
     if (ok)
     {
         output_in_utf8 = std::move(oss_output.str());
-        return true;
+        return;
     }
 
     oss_output.clear();
@@ -134,9 +124,7 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
         std::string pinyin;
         std::wstring wtoken;
         std::vector<std::string> han_zi_pinyins;
-        
-        ok = true;
-        
+
         for (const std::string & token : tokens)
         {
             wtoken = boost::locale::conv::utf_to_utf<wchar_t>(token);
@@ -171,9 +159,6 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
                             oss_output << boost::locale::conv::utf_to_utf<char>(std::wstring(1, wc));
                         }
                     }
-
-                    if (!ok)
-                        break;
                 }
             }
             else
@@ -199,26 +184,18 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
         }
     }
 
-    if (ok)
-        output_in_utf8 = std::move(oss_output.str());
-
-    return ok;
+    output_in_utf8 = std::move(oss_output.str());
 }
 
-bool HanZiToPinYin::GetPinYinFirstLetters(const std::string & input_in_utf8,
+void HanZiToPinYin::GetPinYinFirstLetters(const std::string & input_in_utf8,
                                           std::string & output_in_utf8,
                                           const char seperator)
 {
     std::string pinyin;
-    if (!GetPinYin(input_in_utf8, pinyin))
-    {
-        std::cerr << "GetPinYin failed\n";
-        return false;
-    }
+
+    GetPinYin(input_in_utf8, pinyin);
 
     output_in_utf8 = GetFirstLettersOfPinYin(pinyin, seperator);
-
-    return true;
 }
 
 bool HanZiToPinYin::GetPhrasePinYin(const std::string & phrase,
@@ -244,9 +221,12 @@ bool HanZiToPinYin::GetPhrasePinYin(const std::string & phrase,
     }
     else
     {
-        std::cerr << error_msg << '\n';
+        std::ostringstream oss;
+        oss << u8"sqlite3_exec failed (" << error_msg << u8')';
+        
         sqlite3_free(error_msg);
-        error_msg = nullptr;
+        
+        throw std::runtime_error(oss.str());
     }
 
     return ok;
@@ -262,20 +242,20 @@ bool HanZiToPinYin::GetCharPinYin(const wchar_t wc,
     if (wc >= 0x20 && wc <= 0x7e)
     {
         char c = static_cast<char>(wc);
-        pinyins.push_back({ c });
+        pinyins.push_back({c});
         return true;
     }
     else if (wc >= 0xff21 && wc <= 0xff3a) // ��-��
     {
         //char c = char(wc - 0xff21 + 'A');
         char c = char(wc - 0xff21 + 'a');
-        pinyins.push_back({ c });
+        pinyins.push_back({c});
         return true;
     }
     else if (wc >= 0xff41 && wc <= 0xff5a) // ��-��
     {
         char c = char(wc - 0xff41 + 'a');
-        pinyins.push_back({ c });
+        pinyins.push_back({c});
         return true;
     }
 
@@ -296,9 +276,12 @@ bool HanZiToPinYin::GetCharPinYin(const wchar_t wc,
     }
     else
     {
-        std::cerr << error_msg << '\n';
+        std::ostringstream oss;
+        oss << u8"sqlite3_exec failed (" << error_msg << u8')';
+
         sqlite3_free(error_msg);
-        error_msg = nullptr;
+
+        throw std::runtime_error(oss.str());
     }
 
     return ok;
@@ -308,7 +291,7 @@ std::string HanZiToPinYin::GetFirstLettersOfPinYin(const std::string & pinyin, c
 {
     std::string first_letters;
 
-    std::string seperators{ seperator };
+    std::string seperators{seperator};
 
     std::vector<std::string> v;
     boost::split(v, pinyin, boost::is_any_of(seperators), boost::token_compress_on);

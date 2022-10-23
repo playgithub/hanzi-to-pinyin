@@ -6,12 +6,15 @@
 #define _SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING
 
 // STL
-#include <iostream>
-#include <string>
-#include <sstream>
 #include <fstream>
-#include <regex>
+#include <iostream>
 #include <map>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <regex>
+#include <vector>
 
 // boost
 #include <boost/algorithm/string.hpp>
@@ -25,5 +28,9 @@
 #include <rapidjson/istreamwrapper.h>
 #include <rapidjson/error/en.h>
 
+#include <BasicToolBox/MsgStack/MsgStack.h>
+
 // cppjieba
-//#include <cppjieba/Jieba.hpp>
+#include <cppjieba/config.hpp>
+#include <cppjieba/Jieba.hpp>
+

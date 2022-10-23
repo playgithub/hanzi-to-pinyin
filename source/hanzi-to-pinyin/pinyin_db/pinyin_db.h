@@ -22,8 +22,8 @@ public:
     bool ImportFromPhraseFile(const std::string & phrase_file_path, const std::string & sqlite_file_path);
 
 private:
-    bool ImportFromHanZiString(const std::string & s, sqlite3 * db, const std::string & table_name);
-    bool ImportFromPhraseString(const std::string & s, sqlite3 * db, const std::string & table_name);
+    void ImportFromHanZiString(const std::string & s, sqlite3 * db, const std::string & table_name);
+    void ImportFromPhraseString(const std::string & s, sqlite3 * db, const std::string & table_name);
     bool StripToneFromPinyin(const std::string & pinyin_with_tone, std::string & pinyin_without_tone);
 
 private:
