@@ -1,5 +1,5 @@
 #include <iostream>
-#include <hanzi_to_pinyin.h>
+#include <hanzi-to-pinyin/hanzi_to_pinyin.h>
 
 int main()
 {

@@ -33,6 +33,8 @@ public:
 public:
     bool GetPinYin(const std::string & input_in_utf8, std::string * pinyin_with_tone, std::string * pinyin_without_tone,
                    std::string * pinyin_first_letters, const char seperator = ' ');
+
+private:
     bool GetPinYin(const std::string & input_in_utf8, std::string & output_in_utf8, bool with_tone = false,
                    const char seperator = ' ');
     bool GetPinYinFirstLetters(const std::string & input_in_utf8, std::string & output_in_utf8,

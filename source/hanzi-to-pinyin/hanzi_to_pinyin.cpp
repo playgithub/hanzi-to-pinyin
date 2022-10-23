@@ -134,7 +134,9 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
         std::string pinyin;
         std::wstring wtoken;
         std::vector<std::string> han_zi_pinyins;
+        
         ok = true;
+        
         for (const std::string & token : tokens)
         {
             wtoken = boost::locale::conv::utf_to_utf<wchar_t>(token);
@@ -169,6 +171,7 @@ bool HanZiToPinYin::GetPinYin(const std::string & input_in_utf8,
                             oss_output << boost::locale::conv::utf_to_utf<char>(std::wstring(1, wc));
                         }
                     }
+
                     if (!ok)
                         break;
                 }
@@ -289,10 +292,7 @@ bool HanZiToPinYin::GetCharPinYin(const wchar_t wc,
     pinyins.clear();
     if (sqlite3_exec(__db, oss_sql.str().c_str(), &HanZiToPinYin::Callback_HanZi, &pinyins, &error_msg) == SQLITE_OK)
     {
-        if (!pinyins.empty())
-            ok = true;
-        else
-            std::cerr << "no pinyin for hanzi\n";
+        ok = !pinyins.empty();
     }
     else
     {

@@ -18,13 +18,13 @@ public:
     PinYinDB(const DbConfig & db_cfg, size_t max_record_count_per_insert = 10000);
 
 public:
-    bool FromHanZiFile(const std::string & hanzi_file_path, const std::string & sqlite_file_path);
-    bool FromPhraseFile(const std::string & phrase_file_path, const std::string & sqlite_file_path);
+    bool ImportFromHanZiFile(const std::string & hanzi_file_path, const std::string & sqlite_file_path);
+    bool ImportFromPhraseFile(const std::string & phrase_file_path, const std::string & sqlite_file_path);
 
 private:
-    bool FromStringForHanZi(const std::string & s, sqlite3 * db, const std::string & table_name);
-    bool FromStringForPhrase(const std::string & s, sqlite3 * db, const std::string & table_name);
-    bool ToneToNoTone(const std::string & pinyin_tone, std::string & pinyin_none_tone);
+    bool ImportFromHanZiString(const std::string & s, sqlite3 * db, const std::string & table_name);
+    bool ImportFromPhraseString(const std::string & s, sqlite3 * db, const std::string & table_name);
+    bool StripToneFromPinyin(const std::string & pinyin_with_tone, std::string & pinyin_without_tone);
 
 private:
     static std::map<wchar_t, char> _map_tone_and_no_tone;

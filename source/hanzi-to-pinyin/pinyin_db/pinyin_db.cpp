@@ -1,5 +1,8 @@
+#include <stdexcept>
+
 #include <hanzi-to-pinyin/pch/pch.h>
 #include <hanzi-to-pinyin/config/config.h>
+
 #include "pinyin_db.h"
 
 using namespace HanZiToPinYin_NS;
@@ -26,7 +29,7 @@ PinYinDB::PinYinDB(const DbConfig & db_cfg, size_t max_record_count_per_insert)
 {
 }
 
-bool PinYinDB::FromHanZiFile(const std::string & hanzi_file_path, const std::string & sqlite_file_path)
+bool PinYinDB::ImportFromHanZiFile(const std::string & hanzi_file_path, const std::string & sqlite_file_path)
 {
     bool ok = false;
 
@@ -40,9 +43,10 @@ bool PinYinDB::FromHanZiFile(const std::string & hanzi_file_path, const std::str
         {
             std::string s((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
-            if (FromStringForHanZi(s, db, __db_cfg.GetTableNameForChar()))
+            if (ImportFromHanZiString(s, db, __db_cfg.GetTableNameForChar()))
                 ok = true;
             else
+                
                 std::cerr << "FromStringForHanZi failed\n";
 
             ifs.close();
@@ -66,7 +70,7 @@ bool PinYinDB::FromHanZiFile(const std::string & hanzi_file_path, const std::str
     return ok;
 }
 
-bool PinYinDB::FromPhraseFile(const std::string & phrase_file_path, const std::string & sqlite_file_path)
+bool PinYinDB::ImportFromPhraseFile(const std::string & phrase_file_path, const std::string & sqlite_file_path)
 {
     bool ok = false;
 
@@ -80,7 +84,7 @@ bool PinYinDB::FromPhraseFile(const std::string & phrase_file_path, const std::s
         {
             std::string s((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
 
-            if (FromStringForPhrase(s, db, __db_cfg.GetTableNameForPhrase()))
+            if (ImportFromPhraseString(s, db, __db_cfg.GetTableNameForPhrase()))
                 ok = true;
             else
                 std::cerr << "FromStringForPhrase failed\n";
@@ -106,7 +110,7 @@ bool PinYinDB::FromPhraseFile(const std::string & phrase_file_path, const std::s
     return ok;
 }
 
-bool PinYinDB::FromStringForHanZi(const std::string & s, sqlite3 * db, const std::string & table_name)
+bool PinYinDB::ImportFromHanZiString(const std::string & s, sqlite3 * db, const std::string & table_name)
 {
     std::string::const_iterator it_begin = s.cbegin();
     std::string::const_iterator it_end = s.cend();
@@ -126,18 +130,6 @@ bool PinYinDB::FromStringForHanZi(const std::string & s, sqlite3 * db, const std
         error_msg = nullptr;
         return false;
     }
-
-    // sql.str("");
-    // sql.clear();
-    // sql << "DELETE FROM " << table_name;
-
-    // if (sqlite3_exec(db, sql.str().c_str(), nullptr, 0, &error_msg) != SQLITE_OK)
-    //{
-    //    wxLogDebug(error_msg);
-    //    sqlite3_free(error_msg);
-    //    error_msg = nullptr;
-    //    return false;
-    //}
 
     sql.str("");
     sql.clear();
@@ -175,7 +167,7 @@ bool PinYinDB::FromStringForHanZi(const std::string & s, sqlite3 * db, const std
 
         for (const std::string & s_pinyin_tone : v_pinyins_tone)
         {
-            if (ToneToNoTone(s_pinyin_tone, s_pinyin_no_tone))
+            if (StripToneFromPinyin(s_pinyin_tone, s_pinyin_no_tone))
                 v_pinyins_no_tone.push_back(s_pinyin_no_tone);
         }
 
@@ -208,7 +200,7 @@ bool PinYinDB::FromStringForHanZi(const std::string & s, sqlite3 * db, const std
     return ok;
 }
 
-bool PinYinDB::FromStringForPhrase(const std::string & s, sqlite3 * db, const std::string & table_name)
+bool PinYinDB::ImportFromPhraseString(const std::string & s, sqlite3 * db, const std::string & table_name)
 {
     std::ostringstream oss_sql;
 
@@ -225,18 +217,6 @@ bool PinYinDB::FromStringForPhrase(const std::string & s, sqlite3 * db, const st
         error_msg = nullptr;
         return false;
     }
-
-    // oss_sql.str("");
-    // oss_sql.clear();
-    // oss_sql << "DELETE FROM " << table_name;
-
-    // if (sqlite3_exec(db, oss_sql.str().c_str(), nullptr, 0, &error_msg) != SQLITE_OK)
-    //{
-    //    wxLogDebug(error_msg);
-    //    sqlite3_free(error_msg);
-    //    error_msg = nullptr;
-    //    return false;
-    //}
 
     std::ostringstream oss_sql_head;
     oss_sql_head << "INSERT INTO " << table_name << " VALUES";
@@ -262,7 +242,7 @@ bool PinYinDB::FromStringForPhrase(const std::string & s, sqlite3 * db, const st
     {
         s_pinyins_tone = match[2].str();
 
-        if (ToneToNoTone(s_pinyins_tone, s_pinyins_no_tone))
+        if (StripToneFromPinyin(s_pinyins_tone, s_pinyins_no_tone))
         {
             if (record_count_to_insert > 0)
                 oss_sql_values << ",";
@@ -321,11 +301,11 @@ bool PinYinDB::FromStringForPhrase(const std::string & s, sqlite3 * db, const st
     return ok;
 }
 
-bool PinYinDB::ToneToNoTone(const std::string & pinyin_tone, std::string & pinyin_none_tone)
+bool PinYinDB::StripToneFromPinyin(const std::string & pinyin_with_tone, std::string & pinyin_without_tone)
 {
     bool ok = true;
 
-    std::wstring pinyin_tone_unicode = boost::locale::conv::utf_to_utf<wchar_t>(pinyin_tone);
+    std::wstring pinyin_tone_unicode = boost::locale::conv::utf_to_utf<wchar_t>(pinyin_with_tone);
     std::map<wchar_t, char>::const_iterator it;
     std::ostringstream oss;
     for (wchar_t wc : pinyin_tone_unicode)
@@ -346,7 +326,7 @@ bool PinYinDB::ToneToNoTone(const std::string & pinyin_tone, std::string & pinyi
     }
 
     if (ok)
-        pinyin_none_tone = oss.str();
+        pinyin_without_tone = oss.str();
 
     return ok;
 }
