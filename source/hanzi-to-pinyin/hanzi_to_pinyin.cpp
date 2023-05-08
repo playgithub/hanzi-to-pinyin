@@ -1,7 +1,5 @@
 #include <hanzi-to-pinyin/pch/pch.h>
 
-#include <memory>
-
 #include "hanzi_to_pinyin.h"
 
 using namespace HanZiToPinYin_NS;

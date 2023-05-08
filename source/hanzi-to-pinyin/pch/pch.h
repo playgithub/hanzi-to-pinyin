@@ -12,6 +12,7 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <cstdint>
 #include <string>
 #include <regex>
 #include <vector>
