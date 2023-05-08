@@ -14,6 +14,7 @@ prior.gbk
 tmp
 t.*
 *.pid
+CMakeLists.txt.user
 build
 out/
 /.vscode/
